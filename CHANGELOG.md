@@ -5,8 +5,33 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Validation comparisons reject non-finite values, nulls, missing nested values,
+  empty reference containers and invalid or empty tolerance contracts, so these
+  cannot produce a false numerical pass.
+- IV transformations use their own instrument design, and `if=` selects the
+  estimation sample before formula materialisation.
+- Expanded categorical coefficient names follow the fitted design; floating
+  cluster labels retain their group identities without integer truncation.
+- Collinear WLS computes fitted values from the retained original-scale design.
+- Bayesian linear regression supplies one intercept and matching predictor
+  names. SFA coefficient output omits unavailable sign probabilities.
+- Linear contrasts retain uncertainty at zero estimates and use the selected
+  reference distribution for their confidence intervals.
+- Normal-inference joint tests identify their statistic as scaled Wald rather
+  than reporting an F reference distribution, and preserve representable small
+  tail probabilities through direct survival functions.
+- Nonlinear contrasts propagate the fitted covariance and use the selected
+  scalar inference distribution, including weighted and robust fits.
+- Bayesian production and cost frontier coefficient names match categorical
+  and transformed design columns without invented sign probabilities.
+
 ### Changed
 
+- `nlcom` returns an inference dictionary instead of a scalar. Use `.estimate`
+  for the former numerical return value; the dictionary also exposes standard
+  error, interval, probability and the selected reference distribution.
 - Pinned the Greeners facade to `=2.0.0` and added `--locked` to `cargo clippy`
   and `cargo test` in CI, so a Greeners release (including a numerical fix) can
   only reach Hayashi through a deliberate bump instead of a lockfile resolution.

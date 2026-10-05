@@ -298,6 +298,26 @@ export(m, "html", "table.html")
 
 ### Machine learning, clustering, and spatial
 
+Formula-based OLS labels expanded categorical columns in fitted order. IV uses
+separate structural and instrument designs after applying `if=` once; WLS
+predictions use retained original-scale columns. Finite floating cluster labels
+retain exact group identity, with signed zeros treated as one group.
+
+`bayes_lm` supplies one intercept to the conjugate backend and uses its returned
+coefficient names; no-intercept formulas remain unsupported. SFA coefficient
+output expands categorical and transformed names in fitted order and omits sign
+probabilities because the backend does not supply them.
+`testparm` reports scaled Wald with a chi-square reference under Normal inference
+and uses direct survival probabilities for small representable tails.
+`nlcom` uses fitted covariance and the selected Student-t or Normal distribution.
+It returns a dictionary containing `estimate`, `std_err`, `p_value`, `ci_lower`,
+`ci_upper`, `reference_distribution` and `t` or `z`; Student-t results also contain
+`df`. Use `nlcom(m, expression).estimate` where a scalar return value was used.
+Unresolved numerical derivatives and nonrepresentable intervals return errors,
+and coefficient bindings are restored after expression failures.
+These interpreter contracts are distinct from engine numerical corrections, which
+reach Hayashi only through a deliberate accepted dependency revision.
+
 Hayashi also exposes a growing set of ML, clustering, spatial, and Bayesian estimators:
 
 | Category | Commands |
@@ -462,6 +482,10 @@ hay validate
 
 See `validation/README.md` for the full protocol and `validation/MATRIX.md` for
 the current status of every case.
+
+Numerical comparison requires finite, present, nonempty evidence and finite,
+nonnegative numerical tolerances. Matching undefined quantities do not establish
+agreement; invalid evidence from any executed reference fails the case.
 
 The matrix now covers **215 cases across 115 estimators**, with 199 passing
 against R and Python reference implementations.
@@ -765,4 +789,3 @@ Flávio de Vasconcellos Corrêa — [@sheep-farm](https://github.com/sheep-farm)
 GPL-3.0 with **Plugin Exception** — see [LICENSE](LICENSE).
 
 This exception explicitly allows linking and loading proprietary/closed-source plugins developed using `hayashi-plugin-sdk` into Hayashi without triggering copyleft requirements.
-

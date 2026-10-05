@@ -78,6 +78,8 @@ fn legacy_help_text(topic: &str) -> Option<&'static str> {
         "nlcom" => concat!(
             "nlcom(model, expr)\n",
             "  Nonlinear combination of coefficients (delta method).\n\n",
+            "  Returns a dictionary: estimate, std_err, t or z, p_value, ci_lower, ci_upper, reference_distribution; df is present only for Student-t inference.\n",
+            "  Use result.estimate where a scalar estimate is required.\n",
             "  Example:\n",
             "    nlcom(m, X1 / X2)         Ratio of coefficients\n",
             "    nlcom(m, exp(_cons))       Exponentiate intercept\n",
@@ -108,7 +110,7 @@ fn legacy_help_text(topic: &str) -> Option<&'static str> {
         ),
         "eststo" | "est_store" => "eststo(model)\n  Store a model for later esttab().\n\n  eststo(m1)\n  eststo(m2)\n  esttab()\n",
         "estclear" => "estclear()\n  Clear all models stored by eststo().\n\n  estclear()\n",
-        "testparm" => "testparm(model, [\"x1\", \"x2\", ...])\n  Joint F-test that selected coefficients are all zero.\n  Supports OLS/WLS models.\n\n  testparm(m, [\"X1\", \"X2\"])\n",
+        "testparm" => "testparm(model, [\"x1\", \"x2\", ...])\n  Joint F-test under Student-t inference that selected coefficients are all zero.\n  Supports OLS/WLS models.\n  Normal inference reports scaled Wald Q/J and evaluates Q against chi-square(J).\n\n  testparm(m, [\"X1\", \"X2\"])\n",
         "fe" => concat!(
             "fe(formula, df [, id=col] [, cluster=col] [, cluster2=col])\n",
             "  Fixed Effects (within estimator).\n",
@@ -484,7 +486,7 @@ fn legacy_help_text(topic: &str) -> Option<&'static str> {
         "hausman" => "hausman(m_fe, m_re)\n  Hausman specification test (FE vs RE).\n\n  hausman(m_fe, m_re)\n",
         "tidy" => "tidy(model)\n  Tidy coefficient table: variable, coef, std_err, t/z, p_value, conf_low, conf_high.\n  Supports all model types (OLS, IV, logit, probit, panel, GMM, ARIMA, GARCH, VAR, etc.).\n\n  let m = ols(Y ~ X1 + X2, df)\n  tidy(m)\n",
         "glance" => "glance(model)\n  Model fit statistics as a one-row DataFrame.\n  Keys vary by model: r2, adj_r2, pseudo_r2, n, aic, bic, log_lik, sigma, etc.\n  Supports all model types.\n\n  let m = ols(Y ~ X1 + X2, df)\n  glance(m)\n",
-        "lincom" => "lincom(model, expr)\n  Linear combination of coefficients.\n\n  lincom(m, X1 + X2)\n",
+        "lincom" => "lincom(model, x1=multiplier, ...)\n  Linear combination of coefficients with a 95% confidence interval.\n  Reports t and residual degrees of freedom under Student-t inference, or z under Normal inference.\n\n  lincom(m, X1=1, X2=1)\n",
         "vif" => "vif(model)\n  Variance inflation factors.\n\n  vif(m)\n",
         "influence" => "influence(model)\n  Influence diagnostics: DFFITS, Cook's D, leverage.\n\n  influence(m)\n",
         "ic" | "estat" | "fitstat" | "estat_ic" => "ic(m1, m2 [, ...])\nestat(m1, m2 [, ...])\n  AIC/BIC comparison.\n\n  ic(m1, m2, m3)\n",

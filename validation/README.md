@@ -23,6 +23,14 @@ Use `--experimental` to include cases whose `case.yml` is marked `experimental: 
 the reference scripts for each selected case, compares the declared quantities
 against tolerances, and updates `MATRIX.md`.
 
+Numerical agreement requires finite compared values and a nonempty tolerance
+mapping with finite, nonnegative numerical tolerances. Zero tolerance is valid.
+Missing values, nulls, booleans, empty reference containers and matching NaNs or
+infinities fail comparison. Every successfully executed reference must provide
+valid evidence for the selected quantities; another passing reference cannot
+hide invalid evidence. Integer and numerical-string comparisons preserve their
+represented precision. Unselected output fields remain outside the comparison.
+
 For focused development or issue triage, run a single case without updating
 the generated matrix files:
 
