@@ -6,9 +6,11 @@ both language reference environments are now locked: every CI run restores
 the declared reference package versions, and the resolved versions are
 recorded in the validation artefact.
 
-This document covers the R/Python package environments. The numerical engine
-(Greeners) is pinned in `Cargo.lock` and consumed from crates.io; the validation
-workflow no longer checks out Greeners from source.
+This document covers the R/Python package environments. The numerical engine (Greeners) is resolved by the exact facade dependency and
+immutable Git patch in `Cargo.toml`/`Cargo.lock`. The current provisional fork
+revision is `288c45d6a2df436b377e98fe1f0fcfa1f2e5b091`, pending upstream
+[PR #26](https://github.com/sheep-farm/Greeners/pull/26). Cargo fetches that source;
+the validation workflow does not maintain a separate mutable engine checkout.
 
 ## Python
 

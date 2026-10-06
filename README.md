@@ -330,8 +330,12 @@ weak instruments or general ill-conditioning. Diagnostic responses are internall
 rescaled without changing test statistics; unresolved residual variation returns
 an error. Their non-rejection does not establish instrument validity or OLS
 consistency.
-These interpreter contracts are distinct from engine numerical corrections, which
-reach Hayashi only through a deliberate accepted dependency revision.
+The numerical engine is provisionally pinned to reviewed fork commit
+`288c45d6a2df436b377e98fe1f0fcfa1f2e5b091` while
+[Greeners PR #26](https://github.com/sheep-farm/Greeners/pull/26) awaits maintainer
+review. This immutable pin does not imply upstream acceptance or release
+qualification; replacement with an accepted revision is a separate dependency
+change.
 
 Hayashi also exposes a growing set of ML, clustering, spatial, and Bayesian estimators:
 

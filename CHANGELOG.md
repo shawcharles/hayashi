@@ -38,6 +38,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- Provisionally pin Greeners to immutable reviewed fork revision `288c45d6`
+  pending upstream PR #26. This explicitly replaces the moving upstream `dev`
+  patch before acceptance; it does not assert a merged or released engine.
 - The Rust `Value::IvResult` payload holds `IvModel` with the engine result and
   fitted structural metadata. Embedding code accesses engine fields via `.result`
   and constructs fitted IV values through the interpreter estimation path.
