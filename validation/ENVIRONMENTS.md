@@ -67,8 +67,8 @@ The `Validation` workflow:
 1. Installs Python from `requirements.txt` with hash verification.
 2. Installs the small set of git-only packages from `requirements-git.txt`
    without resolving additional dependencies.
-3. Installs the `renv` 1.2.4 bootstrap package from its exact CRAN source
-   archive, then restores the R environment from `renv.lock` into the
+3. Installs the `renv` 1.2.4 bootstrap package from CRAN's version archive
+   and verifies the installed version, then restores `renv.lock` into the
    `validation` project library. Reference scripts use that same library.
 4. Records the resolved package versions in
    `validation/reports/environment-versions.txt` and uploads it as part of the
