@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 import numpy as np
@@ -65,18 +66,25 @@ class ReferenceAvailabilityTests(unittest.TestCase):
     def r_guard(self, result):
         binary = shutil.which("Rscript")
         if binary is None:
-            self.skipTest("Rscript is required for R reference guard checks")
-        code = """
+            raise RuntimeError("Rscript is required for R reference guard checks")
+        code = r"""
 args <- commandArgs(trailingOnly = TRUE)
 for (node in parse(args[1])) {
   if (is.call(node) && identical(node[[1]], as.name("<-")) &&
       identical(node[[2]], as.name("checked_covariance_rejection"))) eval(node)
 }
-value <- checked_covariance_rejection(jsonlite::fromJSON(args[2], simplifyVector = FALSE))
+payload <- paste(readLines(args[2], warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+value <- checked_covariance_rejection(jsonlite::fromJSON(payload, simplifyVector = FALSE))
 cat(value)
 """
-        return subprocess.run([binary, "-e", code, str(CASE / "reference/run.R"), json.dumps(result, allow_nan=False)],
-                              capture_output=True, text=True, timeout=30)
+        # File arguments avoid Windows Rscript's inline-expression/JSON quoting path.
+        with tempfile.TemporaryDirectory(prefix="panel-r-availability-") as folder:
+            script = Path(folder) / "guard.R"
+            payload = Path(folder) / "input.json"
+            script.write_text(code, encoding="utf-8")
+            payload.write_text(json.dumps(result, allow_nan=False), encoding="utf-8")
+            return subprocess.run([binary, str(script), str(CASE / "reference/run.R"), str(payload)],
+                                  capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30)
 
     def test_expected_material_covariance_rejection_is_numeric_one(self):
         self.assertEqual(self.guard(reference_result()), 1)
@@ -97,22 +105,33 @@ cat(value)
         nonfinite["covariance_diagnostics"]["eigenvalues"] = None
         wrong_reason = reference_result()
         wrong_reason["inference_reason"] = "within design is rank deficient"
-        for result in [admissible, nonfinite, wrong_reason]:
+        invalid_results = [
+            (admissible, "Expected finite materially indefinite d81 covariance"),
+            (nonfinite, "Availability requires finite raw covariance and its spectrum"),
+            (wrong_reason, "Expected finite materially indefinite d81 covariance"),
+        ]
+        for result, expected_reason in invalid_results:
             with self.subTest(reason=result["inference_reason"]):
                 with self.assertRaises(ValueError):
                     self.guard(copy.deepcopy(result))
                 completed = self.r_guard(result)
                 self.assertNotEqual(completed.returncode, 0)
+                self.assertIn(expected_reason, completed.stderr)
                 self.assertNotEqual(completed.stdout, "1")
 
 
 class NativeAvailabilityTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.binary = shutil.which("hay")
-        if cls.binary is None:
-            raise unittest.SkipTest("The native hay binary is required for availability guard checks")
         cls.runner = runner_module()
+        # Match the existing runner's repo-first debug/release .exe discovery.
+        executable = "hay.exe" if sys.platform == "win32" else "hay"
+        candidates = [ROOT / "target" / profile / executable for profile in ["debug", "release"]]
+        cls.binary = next((str(path) for path in candidates if path.exists()), None)
+        if cls.binary is None:
+            cls.binary = shutil.which("hay")
+        if cls.binary is None:
+            raise RuntimeError("Build the native hay binary in target/debug or target/release, or add it to PATH")
 
     def native(self, script, force_file=False):
         with tempfile.TemporaryDirectory(prefix="panel-availability-") as folder:
@@ -159,6 +178,36 @@ class NativeAvailabilityTests(unittest.TestCase):
                                                   {"availability": {"covariance_rejected": 1}},
                                                   {"availability.covariance_rejected": 0})
         self.assertEqual(status, "fail")
+
+
+class NativeDiscoveryTests(unittest.TestCase):
+    def test_windows_repo_binary_discovery_and_path_fallback(self):
+        runner = runner_module()
+        with tempfile.TemporaryDirectory(prefix="panel-native-discovery-") as folder:
+            root = Path(folder)
+            release = root / "target/release/hay.exe"
+            debug = root / "target/debug/hay.exe"
+            release.parent.mkdir(parents=True)
+            debug.parent.mkdir(parents=True)
+            release.touch()
+            module = sys.modules[__name__]
+            with patch.object(module, "ROOT", root), patch.object(module, "runner_module", return_value=runner), \
+                 patch.object(sys, "platform", "win32"), patch.object(shutil, "which", return_value=None):
+                class Probe:
+                    pass
+
+                NativeAvailabilityTests.setUpClass.__func__(Probe)
+                self.assertEqual(Probe.binary, str(release))
+                debug.touch()
+                NativeAvailabilityTests.setUpClass.__func__(Probe)
+                self.assertEqual(Probe.binary, str(debug))
+                debug.unlink()
+                release.unlink()
+                with patch.object(shutil, "which", return_value="path/hay.exe"):
+                    NativeAvailabilityTests.setUpClass.__func__(Probe)
+                    self.assertEqual(Probe.binary, "path/hay.exe")
+                with self.assertRaises(RuntimeError):
+                    NativeAvailabilityTests.setUpClass.__func__(Probe)
 
 
 if __name__ == "__main__":
