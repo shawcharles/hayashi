@@ -41,11 +41,16 @@ unselected, so a pass provides no uncertainty qualification. Both synthetic-DiD
 references are labelled `behavioural-proxy` because their pre-treatment weighting
 and post-treatment gap do not match the general estimator and inference contract.
 
-The two-way clustered wage-panel case is declared `blocked` because its raw
-covariance is materially indefinite. Its R/Python references preserve named
-covariance entries and report inference availability without clipping negative
-variances. A separate Rust regression exercises covariance rejection; the blocked
-case is not counted as passing numerical inference.
+The two-way clustered wage-panel case has dimension `availability`: it checks
+that Hayashi rejects the fixed full-rank design's materially indefinite raw
+covariance, after an ordinary fixed-effects positive control succeeds. Its R/Python
+references retain named raw covariance entries and independently establish the
+rejection premise. Only the numeric `availability.covariance_rejected` indicator
+is compared, at exact tolerance zero. A pass means the expected rejection occurred;
+it does not qualify coefficient accuracy, standard errors or interval coverage.
+Unexpected inference, unrelated errors and admissible or non-finite reference
+covariance fail this contract. No variance clipping or blanket blocked-result
+allowance is used.
 
 For focused development or issue triage, run a single case without updating
 the generated matrix files:

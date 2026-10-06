@@ -509,9 +509,10 @@ agreement; invalid evidence from any executed reference fails the case.
 Each case qualifies only its declared comparison quantities. Wavelet energies,
 forest fit summaries and selected point estimates can pass without qualifying
 uncertainty. Synthetic DiD proxy agreement does not establish general estimator
-validity or causal identification. The two-way clustered wage-panel case remains
-blocked because its raw covariance is materially indefinite; references preserve
-that covariance and report inference unavailable rather than clipping variance.
+validity or causal identification. The two-way clustered wage-panel case tests
+an explicit availability contract: its raw covariance is materially indefinite,
+so inference must be rejected. A passing rejection check does not qualify panel
+coefficient accuracy or uncertainty; references preserve the raw covariance.
 
 The maintained matrix records each case's comparison scope and availability;
 stored statuses are not a substitute for a fresh numerical run.

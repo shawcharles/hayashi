@@ -124,6 +124,9 @@ jobs:
       - name: Add Hayashi to PATH
         run: echo "${{ github.workspace }}/target/release" >> "$GITHUB_PATH"
 
+      - name: Test panel inference availability guards
+        run: python -m unittest validation/test_panel_availability.py -v
+
       - name: Run validation programme
         shell: bash
         run: |

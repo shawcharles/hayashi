@@ -7,6 +7,32 @@
 
 library(jsonlite)
 
+checked_covariance_rejection <- function(result) {
+  # Require the fixed fixture's finite, material d81/eigenvalue rejection.
+  covariance <- do.call(rbind, lapply(result$covariance, function(row) as.numeric(unlist(row))))
+  dimnames(covariance) <- list(names(result$covariance), names(result$covariance))
+  diagnostics <- result$covariance_diagnostics
+  if (is.null(diagnostics$eigenvalues) || !all(is.finite(covariance))) {
+    stop("Availability requires finite raw covariance and its spectrum")
+  }
+  eigenvalues <- as.numeric(unlist(diagnostics$eigenvalues))
+  bounds <- list(diagnostics$symmetry_error, diagnostics$symmetry_bound, diagnostics$eigenvalue_bound)
+  if (any(vapply(bounds, is.null, logical(1))) || !all(is.finite(unlist(bounds))) || !all(is.finite(eigenvalues))) {
+    stop("Availability requires finite covariance diagnostics")
+  }
+  reason <- if (is.null(result$inference_reason)) "" else result$inference_reason
+  expected_rejection <- identical(result$inference_available, FALSE) && isTRUE(diagnostics$finite) &&
+    diagnostics$symmetry_error <= diagnostics$symmetry_bound &&
+    covariance["d81", "d81"] < -diagnostics$symmetry_bound &&
+    any(eigenvalues < -diagnostics$eigenvalue_bound) &&
+    grepl("negative diagonal variance for d81", reason, fixed = TRUE) &&
+    grepl("materially negative eigenvalues", reason, fixed = TRUE)
+  if (!expected_rejection) {
+    stop("Expected finite materially indefinite d81 covariance; this availability contract is not met")
+  }
+  as.integer(expected_rejection)
+}
+
 case_dir <- "validation/cases/panel_fe_twoway_cluster_wagepan"
 csv_path <- file.path(case_dir, "data", "wagepan.csv")
 
@@ -33,9 +59,13 @@ for (j in seq_along(x_names)) {
   X[, j] <- within_vector(X[, j], df[[entity_name]])
 }
 
+if (!all(is.finite(X)) || !all(is.finite(y)) || nrow(X) <= ncol(X) || qr(X)$rank != ncol(X)) {
+  stop("Ordinary within design must be finite, full-rank and have residual degrees of freedom")
+}
 xtx_inv <- solve(crossprod(X))
 beta <- as.numeric(xtx_inv %*% crossprod(X, y))
 names(beta) <- x_names
+if (!all(is.finite(beta))) stop("Ordinary within coefficients must be finite")
 
 residuals <- as.numeric(y - X %*% beta)
 n <- nrow(X)
@@ -65,6 +95,7 @@ meat <- m1$meat + m2$meat - m12$meat
 sandwich <- xtx_inv %*% meat %*% xtx_inv
 
 g <- min(m1$g, m2$g)
+if (g <= 1) stop("Two-way covariance requires at least two groups in each dimension")
 finite_sample_correction <- (g / (g - 1)) * ((n - 1) / (n - k))
 vcov <- finite_sample_correction * sandwich
 # Assess admissibility without modifying raw covariance. The declared budget is
@@ -122,11 +153,7 @@ result <- list(
     negative_variance_terms = as.list(negative_variance_terms)
   )
 )
-if (inference_available) {
-  se <- sqrt(diag(vcov))
-  names(se) <- x_names
-  result$standard_errors <- as.list(se)
-}
+result$availability <- list(covariance_rejected = checked_covariance_rejection(result))
 
 out_dir <- file.path(case_dir, "reference")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)

@@ -809,11 +809,14 @@ cases:
   dimension: numerical
   status: pass
 - id: panel_fe_twoway_cluster_wagepan
-  notes: Two-way clustered covariance is materially indefinite on this dataset, so fitted
-    inference is unavailable. References expose raw covariance without diagonal clipping;
-    the interpreter rejection is covered by a Rust regression.
-  dimension: numerical
-  status: blocked
+  notes: Explicit availability contract for the retained raw materially indefinite
+    covariance. Ordinary FE must succeed outside the catch; only specific covariance
+    rejection can produce the exact numeric indicator 1. Both references assert finite
+    raw covariance with material negative d81 variance and eigenvalues. Unexpected
+    inference success or unrelated errors fail. No coefficient/SE qualification, clipping,
+    PSD projection or blanket allow-blocked policy is implied.
+  dimension: availability
+  status: pass
 - id: panel_fe_wooldridge_wagepan_ch14
   notes: Wooldridge Introductory Econometrics Chapter 14, Example 14.4 panel fixed-effects
     wage equation.

@@ -14,7 +14,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
   estimable point quantities, preserving tolerances and strict NaN rejection.
 - Preserve raw two-way panel covariance in validation references and expose
   unavailable inference instead of fabricating zero uncertainty by clipping.
-  Keep the affected wage-panel case blocked and regression-test rejection.
+  Check the wage-panel case as an explicit availability contract with a successful
+  ordinary FE control and covariance-specific rejection. Unexpected success or
+  unrelated errors fail; a pass does not qualify numerical panel inference.
 - Read plain scientific YAML tolerance scalars as numbers while preserving
   quoted-string rejection and the strict numerical comparison contract.
 - IV fitting and Sargan/endogeneity diagnostics share structural/instrument
