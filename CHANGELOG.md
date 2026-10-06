@@ -7,6 +7,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- Align both IV book chapters with classical Sargan/Durbin-Wu-Hausman
+  assumptions and full instrument designs; non-rejection does not establish
+  instrument validity or OLS consistency.
 - Limit MODWT, forest, spatial-Durbin and synthetic-DiD validation to their
   estimable point quantities, preserving tolerances and strict NaN rejection.
 - Preserve raw two-way panel covariance in validation references and expose
