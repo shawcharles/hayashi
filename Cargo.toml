@@ -135,5 +135,5 @@ panic = 'abort'
 strip = 'symbols'
 
 [patch.crates-io]
-greeners = { git = "https://github.com/shawcharles/Greeners.git", rev = "288c45d6a2df436b377e98fe1f0fcfa1f2e5b091" }
+greeners = { git = "https://github.com/shawcharles/Greeners.git", rev = "e7f57bc8450bdd62c6c2105788b689b839158b6a" }
 

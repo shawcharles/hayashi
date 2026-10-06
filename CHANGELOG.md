@@ -7,6 +7,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- Integrate the reviewed STL seasonal extension, low-pass support, local-linear
+  smoothing and median-weight repair. All log-AirPassengers component quantities
+  meet the stated Python contract at unchanged tolerances; robust R disagreement
+  and the maintainer contribution-terms decision remain separate limits.
 - Align both IV book chapters with classical Sargan/Durbin-Wu-Hausman
   assumptions and full instrument designs; non-rejection does not establish
   instrument validity or OLS consistency.
@@ -50,9 +54,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
-- Provisionally pin Greeners to immutable reviewed fork revision `288c45d6`
-  pending upstream PR #26. This explicitly replaces the moving upstream `dev`
-  patch before acceptance; it does not assert a merged or released engine.
+- Provisionally pin Greeners to immutable reviewed fork revision `e7f57bc8`,
+  combining unmerged statistical PR #26 with the exact STL repair from draft
+  PR #25 and a test-only Gaussian inference fixture correction. Third-party
+  attribution is retained; the STL contribution-terms question remains open.
+  This deliberately advances the fork pin before acceptance and is not a release.
 - The Rust `Value::IvResult` payload holds `IvModel` with the engine result and
   fitted structural metadata. Embedding code accesses engine fields via `.result`
   and constructs fitted IV values through the interpreter estimation path.

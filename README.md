@@ -330,12 +330,13 @@ weak instruments or general ill-conditioning. Diagnostic responses are internall
 rescaled without changing test statistics; unresolved residual variation returns
 an error. Their non-rejection does not establish instrument validity or OLS
 consistency.
-The numerical engine is provisionally pinned to reviewed fork commit
-`288c45d6a2df436b377e98fe1f0fcfa1f2e5b091` while
-[Greeners PR #26](https://github.com/sheep-farm/Greeners/pull/26) awaits maintainer
-review. This immutable pin does not imply upstream acceptance or release
-qualification; replacement with an accepted revision is a separate dependency
-change.
+The numerical engine is provisionally pinned to an immutable combined fork,
+containing the statistical corrections in [Greeners PR #26](https://github.com/sheep-farm/Greeners/pull/26)
+and the STL repair in draft [PR #25](https://github.com/sheep-farm/Greeners/pull/25).
+Both contributions remain unmerged; STL attribution is retained and its
+contribution-terms question remains open. See [`validation/ENVIRONMENTS.md`](validation/ENVIRONMENTS.md)
+for the exact revision and provenance. This pin does not imply upstream acceptance
+or release qualification; an accepted revision requires a separate dependency change.
 
 Hayashi also exposes a growing set of ML, clustering, spatial, and Bayesian estimators:
 
