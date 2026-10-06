@@ -31,6 +31,10 @@ valid evidence for the selected quantities; another passing reference cannot
 hide invalid evidence. Integer and numerical-string comparisons preserve their
 represented precision. Unselected output fields remain outside the comparison.
 
+Plain scientific YAML scalars such as `1e-6` are read as numbers at case
+ingestion. Quoted numeric strings remain strings and cannot satisfy the strict
+numerical tolerance contract. This does not change declared tolerance values.
+
 For focused development or issue triage, run a single case without updating
 the generated matrix files:
 

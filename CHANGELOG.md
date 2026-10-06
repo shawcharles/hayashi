@@ -7,6 +7,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- Read plain scientific YAML tolerance scalars as numbers while preserving
+  quoted-string rejection and the strict numerical comparison contract.
 - IV fitting and Sargan/endogeneity diagnostics share structural/instrument
   preparation and row filtering; transformed and categorical endogenous terms
   are identified in actual fitted column order.

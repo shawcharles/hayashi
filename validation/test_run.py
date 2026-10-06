@@ -641,5 +641,42 @@ class MainExitStatusTests(unittest.TestCase):
         self.assertIn("ERROR: validation blocked (use --allow-blocked to tolerate)", messages)
 
 
+class ScientificYamlToleranceTests(unittest.TestCase):
+    def load_tolerance(self, token):
+        module = load_runner_module()
+        with tempfile.TemporaryDirectory() as temporary:
+            validation = Path(temporary)
+            case = validation / "cases" / "example"
+            case.mkdir(parents=True)
+            matrix = validation / "matrix.yml"
+            matrix.write_text("cases: []\n", encoding="utf-8")
+            (case / "case.yml").write_text(
+                f"id: example\ncomparison:\n  tolerances:\n    estimate: {token}\n",
+                encoding="utf-8",
+            )
+            with patch.object(module, "VALIDATION_DIR", validation), patch.object(module, "MATRIX_YML", matrix):
+                _, cases, _, _ = module.load_cases()
+            return module, cases[0]["comparison"]["tolerances"]["estimate"]
+
+    def test_plain_scientific_yaml_is_numeric_at_ingestion(self):
+        for token, expected in [("1e-6", 1e-6), ("1E6", 1e6), ("+1e+2", 100.), (".5e-2", .005)]:
+            with self.subTest(token=token):
+                module, tolerance = self.load_tolerance(token)
+                self.assertIsInstance(tolerance, float)
+                self.assertEqual(tolerance, expected)
+                status, failures = module.compare_quantities({"estimate": 1.0}, {"estimate": 1.0}, {"estimate": tolerance})
+                self.assertEqual((status, failures), ("pass", []))
+
+    def test_quoted_scientific_strings_remain_invalid_tolerances(self):
+        module, tolerance = self.load_tolerance('"1e-6"')
+        self.assertIsInstance(tolerance, str)
+        status, _ = module.compare_quantities({"estimate": 1.0}, {"estimate": 1.0}, {"estimate": tolerance})
+        self.assertEqual(status, "fail")
+
+    def test_loader_does_not_modify_pyyaml_safe_loader(self):
+        self.load_tolerance("1e-6")
+        self.assertIsInstance(yaml.safe_load("value: 1e-6")['value'], str)
+
+
 if __name__ == "__main__":
     unittest.main()

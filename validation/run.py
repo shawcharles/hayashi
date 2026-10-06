@@ -20,6 +20,19 @@ from typing import Any
 
 import yaml
 
+
+class ValidationLoader(yaml.SafeLoader):
+    """Recognise plain scientific numbers without coercing quoted strings."""
+
+
+# SafeLoader's YAML 1.1 resolver treats a bare 1e-6 as a string. Case files use
+# this numeric spelling, so resolve it at ingestion before strict comparison.
+ValidationLoader.add_implicit_resolver(
+    "tag:yaml.org,2002:float",
+    re.compile(r"^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)[eE][+-]?[0-9]+$"),
+    list("-+0123456789."),
+)
+
 VALIDATION_DIR = Path(__file__).resolve().parent
 ROOT_DIR = VALIDATION_DIR.parent
 MATRIX_YML = VALIDATION_DIR / "matrix.yml"
@@ -1853,7 +1866,7 @@ def load_cases() -> tuple[dict[str, Any], list[dict[str, Any]], set[str], set[st
         raise FileNotFoundError(f"{MATRIX_YML} not found")
 
     with open(MATRIX_YML, encoding="utf-8") as f:
-        matrix = yaml.safe_load(f) or {}
+        matrix = yaml.load(f, Loader=ValidationLoader) or {}
 
     registry = matrix.get("cases", [])
     registry_ids = {entry.get("id") for entry in registry if entry.get("id")}
@@ -1863,7 +1876,7 @@ def load_cases() -> tuple[dict[str, Any], list[dict[str, Any]], set[str], set[st
     for case_yml in sorted(VALIDATION_DIR.glob("cases/*/case.yml")):
         case_id = case_yml.parent.name
         with open(case_yml, encoding="utf-8") as f:
-            case = yaml.safe_load(f) or {}
+            case = yaml.load(f, Loader=ValidationLoader) or {}
         case["id"] = case_id
         case["_manifest_status"] = case.get("status", "not-started")
         discovered.append(case)
