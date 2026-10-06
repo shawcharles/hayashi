@@ -506,8 +506,15 @@ Numerical comparison requires finite, present, nonempty evidence and finite,
 nonnegative numerical tolerances. Matching undefined quantities do not establish
 agreement; invalid evidence from any executed reference fails the case.
 
-The matrix now covers **215 cases across 115 estimators**, with 199 passing
-against R and Python reference implementations.
+Each case qualifies only its declared comparison quantities. Wavelet energies,
+forest fit summaries and selected point estimates can pass without qualifying
+uncertainty. Synthetic DiD proxy agreement does not establish general estimator
+validity or causal identification. The two-way clustered wage-panel case remains
+blocked because its raw covariance is materially indefinite; references preserve
+that covariance and report inference unavailable rather than clipping variance.
+
+The maintained matrix records each case's comparison scope and availability;
+stored statuses are not a substitute for a fresh numerical run.
 
 ## Graphs
 

@@ -67,13 +67,66 @@ sandwich <- xtx_inv %*% meat %*% xtx_inv
 g <- min(m1$g, m2$g)
 finite_sample_correction <- (g / (g - 1)) * ((n - 1) / (n - k))
 vcov <- finite_sample_correction * sandwich
-se <- sqrt(pmax(0, diag(vcov)))
-names(se) <- x_names
+# Assess admissibility without modifying raw covariance. The declared budget is
+# 128*k*eps relative to matrix/spectral scale, matching the Python reference.
+roundoff_multiplier <- 128
+finite_covariance <- all(is.finite(vcov))
+negative_variance_terms <- x_names[diag(vcov) < 0 & is.finite(diag(vcov))]
+eigenvalues <- NULL
+symmetry_error <- NULL
+symmetry_bound <- NULL
+eigenvalue_bound <- NULL
+reasons <- character(0)
+if (!finite_covariance) {
+  reasons <- c(reasons, "covariance contains non-finite entries")
+} else {
+  symmetry_error <- max(abs(vcov - t(vcov)))
+  symmetry_bound <- roundoff_multiplier * k * .Machine$double.eps * max(abs(vcov))
+  # Only the spectral diagnostic uses the symmetric part; raw vcov is retained.
+  eigenvalues <- sort(eigen(0.5 * vcov + 0.5 * t(vcov), symmetric = TRUE, only.values = TRUE)$values)
+  eigenvalue_bound <- roundoff_multiplier * k * .Machine$double.eps * max(abs(eigenvalues))
+  if (symmetry_error > symmetry_bound) {
+    reasons <- c(reasons, "covariance is materially asymmetric")
+  }
+  if (length(negative_variance_terms) > 0) {
+    reasons <- c(reasons, paste("negative diagonal variance for", paste(negative_variance_terms, collapse = ", ")))
+  }
+  if (any(eigenvalues < -eigenvalue_bound)) {
+    reasons <- c(reasons, "covariance has materially negative eigenvalues")
+  }
+}
 
+json_number <- function(value) {
+  # Preserve finite numbers and label IEEE non-finite values in valid JSON.
+  if (is.finite(value)) return(value)
+  if (is.nan(value)) return("NaN")
+  if (value > 0) "Infinity" else "-Infinity"
+}
+
+inference_available <- length(reasons) == 0
+named_covariance <- setNames(lapply(seq_along(x_names), function(i) {
+  setNames(lapply(vcov[i, ], json_number), x_names)
+}), x_names)
 result <- list(
   coefficients = as.list(beta),
-  standard_errors = as.list(se)
+  covariance = named_covariance,
+  inference_available = inference_available,
+  inference_reason = if (inference_available) NULL else paste(reasons, collapse = "; "),
+  covariance_diagnostics = list(
+    finite = finite_covariance,
+    eigenvalues = if (is.null(eigenvalues)) NULL else as.list(eigenvalues),
+    symmetry_error = symmetry_error,
+    symmetry_bound = symmetry_bound,
+    eigenvalue_bound = eigenvalue_bound,
+    roundoff_multiplier = roundoff_multiplier,
+    negative_variance_terms = as.list(negative_variance_terms)
+  )
 )
+if (inference_available) {
+  se <- sqrt(diag(vcov))
+  names(se) <- x_names
+  result$standard_errors <- as.list(se)
+}
 
 out_dir <- file.path(case_dir, "reference")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)

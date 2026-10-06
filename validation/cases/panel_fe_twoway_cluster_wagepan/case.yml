@@ -1,7 +1,7 @@
 id: panel_fe_twoway_cluster_wagepan
 title: Panel fixed-effects wage equation with two-way clustered SEs on Wooldridge wagepan
 estimator_family: panel_fe
-status: pass
+status: blocked
 dimension: numerical
 
 dataset:
@@ -28,9 +28,9 @@ reference_scripts:
   R: cases/panel_fe_twoway_cluster_wagepan/reference/run.R
   Python: cases/panel_fe_twoway_cluster_wagepan/reference/run.py
 
-notes: Panel fixed-effects wage equation with two-way (entity + time) clustered standard errors using explicit within-transformed CR1 reference implementations.
+notes: Two-way clustered covariance is materially indefinite on this dataset, so fitted inference is unavailable. References expose raw covariance without diagonal clipping; the interpreter rejection is covered by a Rust regression.
 
 result:
-  summary: ""
+  summary: "Inference unavailable: raw two-way covariance has negative variance and four negative eigenvalues. Do not interpret clipped zero standard errors as numerical agreement."
   known_differences: []
   issues_opened: []

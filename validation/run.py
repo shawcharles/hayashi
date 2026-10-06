@@ -1659,7 +1659,7 @@ def render_matrix_md(cases: list[dict[str, Any]]) -> str:
             "failed or are missing; exits non-zero unless `--allow-partial` is passed."
         ),
         "- `fail` — Hayashi differs from at least one reference beyond tolerances.",
-        "- `blocked` — no declared reference could run; the case cannot be judged.",
+        "- `blocked` — required execution or fitted inference is unavailable; the case cannot be judged.",
         (
             "- `not-supported` — the validation programme cannot currently test "
             "the stated estimator/workflow contract; this does not necessarily mean "

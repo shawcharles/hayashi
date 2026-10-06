@@ -558,8 +558,8 @@ cases:
   status: pass
 - id: modwt_simulated
   notes: Simulated series (trend + 16-period sine + noise). Greeners MODWT uses unnormalised
-    Haar filters, equivalent to pywt.swt(..., norm=False). Wavelet energies are compared
-    as coefficient-like quantities; standard errors are not meaningful.
+    Haar filters, equivalent to pywt.swt(..., norm=False). Only wavelet energy summaries
+    are compared; standard errors are undefined and excluded from qualification.
   dimension: numerical
   status: pass
 - id: msvar_simulated
@@ -809,10 +809,11 @@ cases:
   dimension: numerical
   status: pass
 - id: panel_fe_twoway_cluster_wagepan
-  notes: Panel fixed-effects wage equation with two-way (entity + time) clustered
-    standard errors using explicit within-transformed CR1 reference implementations.
+  notes: Two-way clustered covariance is materially indefinite on this dataset, so fitted
+    inference is unavailable. References expose raw covariance without diagonal clipping;
+    the interpreter rejection is covered by a Rust regression.
   dimension: numerical
-  status: pass
+  status: blocked
 - id: panel_fe_wooldridge_wagepan_ch14
   notes: Wooldridge Introductory Econometrics Chapter 14, Example 14.4 panel fixed-effects
     wage equation.
@@ -929,8 +930,8 @@ cases:
   dimension: numerical
   status: pass
 - id: rf_simulated
-  notes: Simulated data y = 3*x1 + N(0, 0.1). In-sample R² compared against scikit-learn.
-    Standard errors are not defined for an out-of-bag R² summary.
+  notes: Simulated data y = 3*x1 + N(0, 0.1). Only in-sample R² is compared against scikit-learn;
+    uncertainty and the full forest fitting contract are outside this comparison.
   dimension: numerical
   status: pass
 - id: ridge_hprice1
@@ -964,9 +965,9 @@ cases:
   dimension: numerical
   status: not-supported
 - id: spatial_durbin_simulated
-  notes: Data generated on a 7x7 grid with rook contiguity W, rho=-0.95, beta=0.5.
-    The Durbin model is highly collinear; only the spatial autoregressive parameter
-    is compared.
+  notes: Data generated on a 7x7 grid with rook contiguity W, rho=-0.95, beta=0.5. The
+    Durbin model is highly collinear; only the spatial autoregressive parameter is compared.
+    Standard errors are unavailable in these exports and excluded from qualification.
   dimension: numerical
   status: pass
 - id: spatial_panel_sar_simulated
@@ -1031,9 +1032,10 @@ cases:
   dimension: numerical
   status: pass
 - id: synthdid_simulated
-  notes: Simulated panel with 20 units, 10 periods, treatment begins at period 6 for
-    unit 0 with ATT=2.0. Reference uses a simple synthetic-control-style pre-treatment
-    weighting and computes the post-treatment mean gap. The ATT has no standard error.
+  notes: Simulated panel with 20 units, 10 periods, treatment begins at period 6 for unit
+    0 with ATT=2.0. Only the point estimate is compared with a synthetic-control-style
+    pre-treatment weighting reference. Uncertainty and general synthetic DiD validity are
+    outside this proxy comparison.
   dimension: numerical
   status: pass
 - id: sysgmm_wagepan

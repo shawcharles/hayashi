@@ -74,16 +74,67 @@ sandwich = xtx_inv @ meat @ xtx_inv
 g = min(g1, g2)
 finite_sample_correction = (g / (g - 1)) * ((n - 1) / (n - k))
 vcov = finite_sample_correction * sandwich
-se = np.sqrt(np.maximum(0, np.diag(vcov)))
+# Admissibility is assessed without changing any covariance entry. The factor
+# 128*k*eps declares the floating-point budget relative to matrix/spectral scale.
+roundoff_multiplier = 128
+finite_covariance = bool(np.isfinite(vcov).all())
+negative_variance_terms = [name for name, value in zip(x_names, np.diag(vcov)) if np.isfinite(value) and value < 0]
+eigenvalues = None
+symmetry_error = None
+symmetry_bound = None
+eigenvalue_bound = None
+reasons = []
+if not finite_covariance:
+    reasons.append("covariance contains non-finite entries")
+else:
+    symmetry_error = float(np.max(np.abs(vcov - vcov.T)))
+    symmetry_bound = float(roundoff_multiplier * k * np.finfo(float).eps * np.max(np.abs(vcov)))
+    # The symmetric part is used only for the spectral diagnostic; raw vcov is retained.
+    eigenvalues = np.linalg.eigvalsh(0.5 * vcov + 0.5 * vcov.T)
+    eigenvalue_bound = float(roundoff_multiplier * k * np.finfo(float).eps * np.max(np.abs(eigenvalues)))
+    if symmetry_error > symmetry_bound:
+        reasons.append("covariance is materially asymmetric")
+    if negative_variance_terms:
+        reasons.append("negative diagonal variance for " + ", ".join(negative_variance_terms))
+    if np.any(eigenvalues < -eigenvalue_bound):
+        reasons.append("covariance has materially negative eigenvalues")
 
+
+def _json_number(value: float) -> float | str:
+    """Preserve finite numbers and label IEEE non-finite values in valid JSON."""
+    if np.isfinite(value):
+        return float(value)
+    if np.isnan(value):
+        return "NaN"
+    return "Infinity" if value > 0 else "-Infinity"
+
+
+inference_available = not reasons
 result = {
     "coefficients": {name: float(value) for name, value in zip(x_names, beta)},
-    "standard_errors": {name: float(value) for name, value in zip(x_names, se)},
+    "covariance": {
+        row_name: {column_name: _json_number(value) for column_name, value in zip(x_names, row)}
+        for row_name, row in zip(x_names, vcov)
+    },
+    "inference_available": inference_available,
+    "inference_reason": "; ".join(reasons) if reasons else None,
+    "covariance_diagnostics": {
+        "finite": finite_covariance,
+        "eigenvalues": None if eigenvalues is None else [float(value) for value in eigenvalues],
+        "symmetry_error": symmetry_error,
+        "symmetry_bound": symmetry_bound,
+        "eigenvalue_bound": eigenvalue_bound,
+        "roundoff_multiplier": roundoff_multiplier,
+        "negative_variance_terms": negative_variance_terms,
+    },
 }
+if inference_available:
+    se = np.sqrt(np.diag(vcov))
+    result["standard_errors"] = {name: float(value) for name, value in zip(x_names, se)}
 
 out_dir = CASE_DIR / "reference"
 out_dir.mkdir(parents=True, exist_ok=True)
-with open(out_dir / "expected.json", "w") as f:
-    json.dump(result, f, indent=2)
+with open(out_dir / "expected.json", "w", encoding="utf-8") as f:
+    json.dump(result, f, indent=2, allow_nan=False)
 
-print(json.dumps(result))
+print(json.dumps(result, allow_nan=False))

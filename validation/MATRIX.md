@@ -111,7 +111,7 @@
 | mixed | wooldridge::wagepan | R, Python | pass | — | Wooldridge Introductory Econometrics Chapter 14, Example 14.4 mixed linear model wage equation. |
 | mlogit | AER::TravelMode | R, Python | pass | — | Multinomial logit of chosen travel mode (air=1, train=2, bus=3, car=4) on income, wait time, vehicle cost and travel time. |
 | mlp | simulated | R, Python | pass | — | Simulated linear-ish y from x1 and x2 with small noise. Compare R-squared against R nnet and scikit-learn MLPRegressor. Tolerance is relaxed because different initialisation and optimisers produce different R-squared. |
-| modwt | simulated | R, Python | pass | — | Simulated series (trend + 16-period sine + noise). Greeners MODWT uses unnormalised Haar filters, equivalent to pywt.swt(..., norm=False). Wavelet energies are compared as coefficient-like quantities; standard errors are not meaningful. |
+| modwt | simulated | R, Python | pass | — | Simulated series (trend + 16-period sine + noise). Greeners MODWT uses unnormalised Haar filters, equivalent to pywt.swt(..., norm=False). Only wavelet energy summaries are compared; standard errors are undefined and excluded from qualification. |
 | msvar | simulated_msvar | R, Python | pass | — | Simulated two-regime VAR with known intercepts and transition matrix; compares regime-specific y1 intercepts and transition probabilities against R MSwM and Python statsmodels MarkovRegression. Tolerances reflect label/algorithm sensitivity in regime-switching models. |
 | nardl | simulated | R, Python | pass | — | Simulated NARDL(1,1) with asymmetric long-run multipliers and short-run dynamics. y and x are random walks with positive and negative shock decomposition. |
 | negbin | wooldridge::fertil2 | R, Python | pass | — | Negative binomial regression for number of children on age, education, electric and urban indicators. |
@@ -162,7 +162,7 @@
 | panel_fe | wooldridge::wagepan | R, Python | pass | 115 | Panel fixed-effects wage equation with worker-clustered standard errors using explicit within-transformed CR1 reference implementations. Tolerance reflects Hayashi's four-decimal text export. |
 | panel_fe | wooldridge::grunfeld | R, Python | pass | — | Panel fixed-effects investment demand model (Grunfeld). |
 | panel_fe | wooldridge::wagepan | R, Python | pass | — | Panel fixed-effects wage equation with time-clustered standard errors using explicit within-transformed CR1 reference implementations. |
-| panel_fe | wooldridge::wagepan | R, Python | pass | — | Panel fixed-effects wage equation with two-way (entity + time) clustered standard errors using explicit within-transformed CR1 reference implementations. |
+| panel_fe | wooldridge::wagepan | R, Python | blocked | — | Two-way clustered covariance is materially indefinite on this dataset, so fitted inference is unavailable. References expose raw covariance without diagonal clipping; the interpreter rejection is covered by a Rust regression. |
 | panel_fe | wooldridge::wagepan | R, Python | pass | — | Wooldridge Introductory Econometrics Chapter 14, Example 14.4 panel fixed-effects wage equation. |
 | panel_heckman | simulated_panel_heckman | R, Python | pass | — | Panel Heckman selection model (two-step) with selection equation and outcome equation. Uses simulated panel data with known selection mechanism. |
 | panel_qreg | simulated | R, Python | pass | — | Simulated panel with entity fixed effects and heteroskedastic errors. References demean the data and run quantile regression without an intercept; standard errors are convention-sensitive. |
@@ -184,14 +184,14 @@
 | re | grunfeld | R, Python | pass | 101 | Random-effects investment demand model (Grunfeld). |
 | reg_path | simulated | R, Python | pass | — | Simulated data where y = 0.5 + x1 + noise and x2 is noise. Hayashi reg_path selects an elastic-net lambda by BIC; references fit glmnet and sklearn ElasticNet at the same optimal lambda and standardisation. |
 | diagnostics | simulated | R | pass | — | Ramsey RESET specification test on simulated OLS residuals. |
-| rf | simulated | R, Python | pass | — | Simulated data y = 3*x1 + N(0, 0.1). In-sample R² compared against scikit-learn. Standard errors are not defined for an out-of-bag R² summary. |
+| rf | simulated | R, Python | pass | — | Simulated data y = 3*x1 + N(0, 0.1). Only in-sample R² is compared against scikit-learn; uncertainty and the full forest fitting contract are outside this comparison. |
 | ridge | wooldridge::hprice1 | R, Python | pass | 106 | Ridge regression of log house price on log lot size, log square footage, bedrooms and colonial dummy. |
 | rlm | wooldridge::wage1 | R, Python | pass | — | Huber robust linear regression of log wage on education, experience, and tenure. |
 | rolling | simulated | R, Python | pass | — | Simulated linear trend (y = 1 + 2x + noise). Compares the last-window rolling OLS coefficients produced by Hayashi's rolling() against a zoo::rollapply reference and a statsmodels OLS fit on the final window. |
 | setar | simulated | R, Python | pass | — | Simulated SETAR(1,1,1) with two regimes split by y_{t-1}. Hayashi grid search may differ slightly from R tsDyn; tolerances are relaxed accordingly. |
 | sfa | simulated | R, Python | pass | — | Simulated Cobb-Douglas production frontier with negligible inefficiency so MLE/OLS references align with Hayashi. |
 | spatial_durbin_error | simulated |  | not-supported | — | R spatialreg/spdep packages failed to install in previous sessions. |
-| spatial_durbin | simulated | R, Python | pass | — | Data generated on a 7x7 grid with rook contiguity W, rho=-0.95, beta=0.5. The Durbin model is highly collinear; only the spatial autoregressive parameter is compared. |
+| spatial_durbin | simulated | R, Python | pass | — | Data generated on a 7x7 grid with rook contiguity W, rho=-0.95, beta=0.5. The Durbin model is highly collinear; only the spatial autoregressive parameter is compared. Standard errors are unavailable in these exports and excluded from qualification. |
 | spatial_panel_sar | simulated | R | not-supported | — | R splm reference fails in CI; no stable reference currently available. |
 | spatial_sar | simulated | R, Python | pass | — | Data generated on a 7x7 grid with rook contiguity W, rho=0.3, beta=0.5. Reference implements the same concentrated MLE independently. |
 | spatial_sem | simulated | R, Python | pass | — | Data generated on a 7x7 grid with rook contiguity W, lambda=0.1, beta=0.5. Reference implements the same concentrated MLE independently. |
@@ -204,7 +204,7 @@
 | svar | simulated | R, Python | pass | — | Simulated stable VAR(1) with 250 observations. Blanchard-Quah long-run identification via lower Cholesky of the long-run covariance. |
 | diagnostics | simulated | R | pass | — | Shapiro-Wilk normality test on a simulated random sample. |
 | synth | synth_smoking | R, Python | pass | — | R, Python, and Hayashi implement the same outcome-only simplex SCM and agree on ATT within tolerance. |
-| synthdid | simulated | R, Python | pass | — | Simulated panel with 20 units, 10 periods, treatment begins at period 6 for unit 0 with ATT=2.0. Reference uses a simple synthetic-control-style pre-treatment weighting and computes the post-treatment mean gap. The ATT has no standard error. |
+| synthdid | simulated | R, Python | pass | — | Simulated panel with 20 units, 10 periods, treatment begins at period 6 for unit 0 with ATT=2.0. Only the point estimate is compared with a synthetic-control-style pre-treatment weighting reference. Uncertainty and general synthetic DiD validity are outside this proxy comparison. Evidence: Python (behavioural-proxy: coefficients); R (behavioural-proxy: coefficients). |
 | sysgmm | wooldridge::wagepan | R, Python | pass | 117 | System GMM (Blundell-Bond) two-step on Wooldridge wagepan with lags=2. R and Python references explicitly implement the same two-step System GMM procedure used by Hayashi/Greeners; plm::pgmm is not used as the active R oracle because it uses different instrument and weighting conventions. |
 | descriptive | wooldridge::wage1 | R, Python | pass | — | Tabstat statistics (mean, sd, min, max, p50) for wage, educ, exper, tenure. |
 | descriptive | wooldridge::mroz | R, Python | pass | — | Two-way frequency table with Pearson chi-square test. |
@@ -243,7 +243,7 @@
 - `pass` — Hayashi matches all available references within declared tolerances.
 - `partial` — Hayashi matches at least one reference, but other declared references failed or are missing; exits non-zero unless `--allow-partial` is passed.
 - `fail` — Hayashi differs from at least one reference beyond tolerances.
-- `blocked` — no declared reference could run; the case cannot be judged.
+- `blocked` — required execution or fitted inference is unavailable; the case cannot be judged.
 - `not-supported` — the validation programme cannot currently test the stated estimator/workflow contract; this does not necessarily mean Hayashi lacks the command.
 - `not-started` — registered but not implemented.
 

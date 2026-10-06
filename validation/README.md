@@ -35,6 +35,18 @@ Plain scientific YAML scalars such as `1e-6` are read as numbers at case
 ingestion. Quoted numeric strings remain strings and cannot satisfy the strict
 numerical tolerance contract. This does not change declared tolerance values.
 
+The MODWT, random-forest, spatial-Durbin and synthetic-DiD cases compare only
+their declared finite point quantities. Their uncertainty placeholders are
+unselected, so a pass provides no uncertainty qualification. Both synthetic-DiD
+references are labelled `behavioural-proxy` because their pre-treatment weighting
+and post-treatment gap do not match the general estimator and inference contract.
+
+The two-way clustered wage-panel case is declared `blocked` because its raw
+covariance is materially indefinite. Its R/Python references preserve named
+covariance entries and report inference availability without clipping negative
+variances. A separate Rust regression exercises covariance rejection; the blocked
+case is not counted as passing numerical inference.
+
 For focused development or issue triage, run a single case without updating
 the generated matrix files:
 
@@ -94,7 +106,8 @@ Rscript -e 'd <- read.dcf("validation/DESCRIPTION"); pkgs <- trimws(strsplit(d[1
 Most cases provide both an R and a Python reference implementation. The
 validation runner runs every declared reference and compares Hayashi
 independently against every reference that runs successfully. A case is
-`blocked` when no declared reference runs. It is `partial` when at least one
+`blocked` when required execution or fitted inference is unavailable, including
+when no declared reference runs. It is `partial` when at least one
 reference runs but another declared reference fails or is missing; partial
 results exit non-zero unless `--allow-partial` is passed. `MATRIX.md` lists the
 declared references and recorded case status. When a runner result records
