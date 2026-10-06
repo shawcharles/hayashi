@@ -300,8 +300,15 @@ export(m, "html", "table.html")
 
 Formula-based OLS labels expanded categorical columns in fitted order. IV uses
 separate structural and instrument designs after applying `if=` once; WLS
-predictions use retained original-scale columns. Finite floating cluster labels
-retain exact group identity, with signed zeros treated as one group.
+predictions use retained original-scale columns. IV diagnostics share the same
+formula materialisation and filtered sample as fitting. Instrument formulas specify
+the full instrument matrix, including common exogenous regressors; these are not
+added implicitly. IV prediction evaluates the fitted structural RHS and preserves
+its intercept and category encoding on new predictor-only data. Unknown category
+levels are errors. Numeric categorical terms retain the backend's existing
+rounded-integer coding; typed string categories retain their labels. Finite
+floating cluster labels retain exact group identity, with signed zeros treated
+as one group.
 
 `bayes_lm` supplies one intercept to the conjugate backend and uses its returned
 coefficient names; no-intercept formulas remain unsupported. SFA coefficient
@@ -315,6 +322,14 @@ It returns a dictionary containing `estimate`, `std_err`, `p_value`, `ci_lower`,
 `df`. Use `nlcom(m, expression).estimate` where a scalar return value was used.
 Unresolved numerical derivatives and nonrepresentable intervals return errors,
 and coefficient bindings are restored after expression failures.
+`estat_overid` is the classical homoskedastic Sargan test, and `estat_endog` uses
+the classical augmented Durbin-Wu-Hausman test, conditional on valid identifying
+instruments. Unrepresentable structural/instrument quadratic moments produce a
+rescaling error before backend evaluation. This range guard does not diagnose
+weak instruments or general ill-conditioning. Diagnostic responses are internally
+rescaled without changing test statistics; unresolved residual variation returns
+an error. Their non-rejection does not establish instrument validity or OLS
+consistency.
 These interpreter contracts are distinct from engine numerical corrections, which
 reach Hayashi only through a deliberate accepted dependency revision.
 

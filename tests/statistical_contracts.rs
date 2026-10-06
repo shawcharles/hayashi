@@ -53,15 +53,31 @@ fn iv_transformed_instruments_match_explicit_columns_and_names() {
         let Value::IvResult(expected) = interpreter.env.get("reference").unwrap() else {
             panic!("expected reference IV result");
         };
-        assert_eq!(actual.params.len(), expected.params.len());
-        for (&a, &b) in actual.params.iter().zip(expected.params.iter()) {
+        assert_eq!(actual.result.params.len(), expected.result.params.len());
+        for (&a, &b) in actual
+            .result
+            .params
+            .iter()
+            .zip(expected.result.params.iter())
+        {
             close(a, b);
         }
-        for (&a, &b) in actual.std_errors.iter().zip(expected.std_errors.iter()) {
+        for (&a, &b) in actual
+            .result
+            .std_errors
+            .iter()
+            .zip(expected.result.std_errors.iter())
+        {
             close(a, b);
         }
         assert_eq!(
-            actual.variable_names.as_ref().unwrap().last().unwrap(),
+            actual
+                .result
+                .variable_names
+                .as_ref()
+                .unwrap()
+                .last()
+                .unwrap(),
             "log(x)"
         );
     }
@@ -76,11 +92,21 @@ fn iv_filter_and_cluster_labels_share_the_explicitly_filtered_sample() {
     let Value::IvResult(expected) = interpreter.env.get("reference").unwrap() else {
         panic!("IV reference");
     };
-    assert_eq!(actual.n_obs, 6);
-    for (&a, &b) in actual.params.iter().zip(expected.params.iter()) {
+    assert_eq!(actual.result.n_obs, 6);
+    for (&a, &b) in actual
+        .result
+        .params
+        .iter()
+        .zip(expected.result.params.iter())
+    {
         close(a, b);
     }
-    for (&a, &b) in actual.std_errors.iter().zip(expected.std_errors.iter()) {
+    for (&a, &b) in actual
+        .result
+        .std_errors
+        .iter()
+        .zip(expected.result.std_errors.iter())
+    {
         close(a, b);
     }
 }

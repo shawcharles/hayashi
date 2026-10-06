@@ -94,45 +94,24 @@ impl Interpreter {
         opts: &[Opt],
         opt_map: &HashMap<String, Value>,
     ) -> Result<Value> {
-        if args.len() < 3 {
-            return Err(HayashiError::Runtime(
-                "iv() requires (endog_formula, instrument_formula, dataframe)".into(),
-            ));
-        }
-        let endog_ast = self.resolve_formula_allow_no_intercept(&args[0])?;
-        let instr_ast = self.resolve_formula_allow_no_intercept(&args[1])?;
-        let df_name = match &args[2] {
-            Expr::Var(name) => name.clone(),
-            _ => {
-                return Err(HayashiError::Type(
-                    "third argument must be a DataFrame variable".into(),
-                ))
-            }
-        };
-        let df = match self.env.get(&df_name) {
-            Some(Value::DataFrame(df)) => df.clone(),
-            _ => return Err(self.rt_err(format!("'{df_name}' is not a DataFrame"))),
-        };
-        let df = self.maybe_filter_df(&df, opts)?;
-        let (df_endog, g_endog, display_names) =
-            self.prepare_formula_allow_no_intercept(&endog_ast, &df)?;
-        let cov = resolve_cov_full(opt_map, &df_endog)?;
-        let (df_instr, mut g_instr, _) =
-            self.prepare_formula_allow_no_intercept(&instr_ast, &df)?;
-        // Z has no response. Reuse the structural response only to construct
-        // its matrix; each formula's generated columns stay in its own frame.
-        g_instr.dependent = g_endog.dependent.clone();
-        let (y, x) = df_endog
-            .to_design_matrix(&g_endog)
-            .map_err(|e| HayashiError::Runtime(e.to_string()))?;
-        let (_, z) = df_instr
-            .to_design_matrix(&g_instr)
-            .map_err(|e| HayashiError::Runtime(e.to_string()))?;
-        let names = Self::expanded_formula_names(&df_endog, &g_endog, &display_names)?;
-        let result = IV::fit_with_names(&y, &x, &z, cov, Some(names))
-            .map_err(|e| HayashiError::Runtime(e.to_string()))?;
+        let mut prepared = self.prepare_iv(args, opts)?;
+        let cov = resolve_cov_full(opt_map, &prepared.structural_frame)?;
+        let result = IV::fit_with_names(
+            &prepared.y,
+            &prepared.x,
+            &prepared.z,
+            cov,
+            // The backend owns its names; metadata retains the original order
+            // for validating omitted positions and rematerialised predictions.
+            Some(prepared.design.names.clone()),
+        )
+        .map_err(|e| HayashiError::Runtime(e.to_string()))?;
 
-        Ok(Value::IvResult(Rc::new(result)))
+        prepared.design.retain_fitted_columns(&result)?;
+        Ok(Value::IvResult(Rc::new(super::super::models::IvModel {
+            result,
+            design: prepared.design,
+        })))
     }
 
     #[cfg(feature = "greeners-ols")]

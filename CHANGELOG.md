@@ -7,6 +7,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- IV fitting and Sargan/endogeneity diagnostics share structural/instrument
+  preparation and row filtering; transformed and categorical endogenous terms
+  are identified in actual fitted column order.
+- IV prediction retains structural transformations and category encoding,
+  including subset levels and predictor-only new data. Unseen levels fail.
+- Classical IV diagnostic labels and conclusions no longer imply a robust
+  Hansen test, instrument validity or OLS consistency after non-rejection.
+- IV diagnostic response rescaling preserves test statistics across outcome
+  units; unresolved residual variation errors rather than fabricating p=1.
 - Validation comparisons reject non-finite values, nulls, missing nested values,
   empty reference containers and invalid or empty tolerance contracts, so these
   cannot produce a false numerical pass.
@@ -29,6 +38,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- The Rust `Value::IvResult` payload holds `IvModel` with the engine result and
+  fitted structural metadata. Embedding code accesses engine fields via `.result`
+  and constructs fitted IV values through the interpreter estimation path.
 - `nlcom` returns an inference dictionary instead of a scalar. Use `.estimate`
   for the former numerical return value; the dictionary also exposes standard
   error, interval, probability and the selected reference distribution.
